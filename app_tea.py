@@ -13,11 +13,13 @@ class AppEducacionalTEA:
     def __init__(self, root):
         self.root = root
         self.root.title("App Educacional - Aprendendo de Forma Divertida")
-        self.root.geometry("600x550")
+        self.root.geometry("600x580")
         self.root.configure(bg=COR_FUNDO)
         
-        # Variável para armazenar a letra alvo atual do jogo
+        # Variáveis de controle dos jogos
         self.letra_alvo = ""
+        self.numero_alvo = 0
+        self.objeto_atual = ""
         
         # Inicializa a tela principal
         self.criar_tela_principal()
@@ -71,10 +73,9 @@ class AppEducacionalTEA:
         btn_numeros.grid(row=0, column=1, padx=20)
 
     def abrir_modulo_letras(self):
-        """Módulo de Letras expandido de forma dinâmica para todo o alfabeto (A-Z)"""
+        """Módulo de Letras dinâmico para todo o alfabeto (A-Z)"""
         self.limpar_tela()
         
-        # Seleciona uma letra aleatória de A a Z como alvo pedagógico
         self.letra_alvo = random.choice(string.ascii_uppercase)
         
         label_instrucao = tk.Label(
@@ -86,17 +87,14 @@ class AppEducacionalTEA:
         )
         label_instrucao.pack(pady=25)
 
-        # Gera 4 alternativas: a letra correta + 3 letras incorretas aleatórias
         alternativas = [self.letra_alvo]
         while len(alternativas) < 4:
             letra_aleatoria = random.choice(string.ascii_uppercase)
             if letra_aleatoria not in alternativas:
                 alternativas.append(letra_aleatoria)
         
-        # Embaralha as alternativas para a letra certa não ficar sempre no mesmo lugar
         random.shuffle(alternativas)
 
-        # Grid 2x2 para exibição de botões grandes e fáceis de clicar (Baixo esforço físico)
         frame_opcoes = tk.Frame(self.root, bg=COR_FUNDO)
         frame_opcoes.pack(pady=15)
 
@@ -121,40 +119,78 @@ class AppEducacionalTEA:
         btn_voltar.pack(side="bottom", pady=25)
 
     def verificar_resposta_letras(self, letra_escolhida):
-        """Processa a resposta fornecendo reforço positivo ou tolerância ao erro"""
         if letra_escolhida == self.letra_alvo:
             messagebox.showinfo("Parabéns!", "🌟 Você acertou! Muito bem! 🌟")
-            self.abrir_modulo_letras()  # Avança para uma nova letra aleatória automaticamente
+            self.abrir_modulo_letras()
         else:
             messagebox.showinfo("Tente de Novo", "Vamos tentar mais uma vez? Você consegue! ✨")
 
     def abrir_modulo_numeros(self):
+        """Módulo de Números atualizado: sorteia até 10 e varia os objetos na tela"""
         self.limpar_tela()
+        
+        # Sorteia uma quantidade de 1 a 10
+        self.numero_alvo = random.randint(1, 10)
+        
+        # Lista com formatos e objetos diferentes para diversificar os estímulos
+        lista_objetos = ['🍎', '🎈', '🚗', '🐱', '⚽', '🍦', '🦋', '🐶', '🍕', '🧸']
+        self.objeto_atual = random.choice(lista_objetos)
+        
+        # Organiza a exibição dos objetos para não quebrar a tela de forma desorganizada
+        if self.numero_alvo <= 5:
+            exibicao_objetos = "  ".join([self.objeto_atual] * self.numero_alvo)
+        else:
+            # Se for maior que 5, quebra em duas linhas para manter o design limpo
+            linha1 = "  ".join([self.objeto_atual] * 5)
+            linha2 = "  ".join([self.objeto_atual] * (self.numero_alvo - 5))
+            exibicao_objetos = f"{linha1}\n{linha2}"
         
         label_instrucao = tk.Label(
             self.root, 
-            text="Quantas estrelas você vê?\n⭐  ⭐  ⭐", 
+            text=f"Quantos você vê?\n\n{exibicao_objetos}", 
             font=("Comic Sans MS", 22, "bold"), 
             bg=COR_FUNDO, 
             fg=COR_TEXTO
         )
-        label_instrucao.pack(pady=30)
+        label_instrucao.pack(pady=20)
 
+        # Gera 4 alternativas numéricas (a correta + 3 erradas de 1 a 10)
+        alternativas = [self.numero_alvo]
+        while len(alternativas) < 4:
+            num_aleatorio = random.randint(1, 10)
+            if num_aleatorio not in alternativas:
+                alternativas.append(num_aleatorio)
+        
+        random.shuffle(alternativas)
+
+        # Grid de botões 2x2 para facilitar a escolha física da criança
         frame_opcoes = tk.Frame(self.root, bg=COR_FUNDO)
-        frame_opcoes.pack(pady=20)
+        frame_opcoes.pack(pady=10)
 
-        btn_1 = tk.Button(frame_opcoes, text="1", font=("Arial", 32, "bold"), width=4, bg="#FFF", fg=COR_TEXTO, command=lambda: self.processar_resposta_geral(False))
-        btn_1.grid(row=0, column=0, padx=15)
-
-        btn_3 = tk.Button(frame_opcoes, text="3", font=("Arial", 32, "bold"), width=4, bg="#FFF", fg=COR_TEXTO, command=lambda: self.processar_resposta_geral(True))
-        btn_3.grid(row=0, column=1, padx=15)
+        for indice, num in enumerate(alternativas):
+            linha = indice // 2
+            coluna = indice % 2
+            
+            btn_opcao = tk.Button(
+                frame_opcoes, 
+                text=str(num), 
+                font=("Arial", 28, "bold"), 
+                width=5, 
+                bg="#FFFFFF",
+                fg=COR_TEXTO,
+                bd=2,
+                relief="raised",
+                command=lambda n=num: self.verificar_resposta_numeros(n)
+            )
+            btn_opcao.grid(row=linha, column=coluna, padx=15, pady=12)
         
         btn_voltar = tk.Button(self.root, text="⬅ Voltar ao Menu", font=("Comic Sans MS", 12), command=self.criar_tela_principal)
-        btn_voltar.pack(side="bottom", pady=30)
+        btn_voltar.pack(side="bottom", pady=20)
 
-    def processar_resposta_geral(self, acerto):
-        if acerto:
+    def verificar_resposta_numeros(self, numero_escolhido):
+        if numero_escolhido == self.numero_alvo:
             messagebox.showinfo("Parabéns!", "🌟 Você acertou! Muito bem! 🌟")
+            self.abrir_modulo_numeros() # Carrega um novo desafio de contagem automaticamente
         else:
             messagebox.showinfo("Tente de Novo", "Vamos tentar mais uma vez? Você consegue! ✨")
 
