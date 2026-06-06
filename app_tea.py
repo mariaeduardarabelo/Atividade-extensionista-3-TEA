@@ -2,39 +2,48 @@ import tkinter as tk
 from tkinter import messagebox
 import random
 import string
+import winsound
 
-# Configuração de Cores Acessíveis (Evitam hipersensibilidade visual em crianças com TEA)
 COR_FUNDO = "#EBF4F6"
-COR_BOTAO_LETRAS = "#FFD1DC"  # Rosa pastel
-COR_BOTAO_NUMEROS = "#BDFCC9" # Verde pastel
-COR_BOTAO_JOGOS = "#BFEFFF"   # Azul pastel
+COR_BOTAO_LETRAS = "#FFD1DC"
+COR_BOTAO_NUMEROS = "#BDFCC9"
+COR_BOTAO_JOGOS = "#BFEFFF"
 COR_TEXTO = "#2C3E50"
 
 class AppEducacionalTEA:
     def __init__(self, root):
         self.root = root
         self.root.title("App Educacional - Aprendendo de Forma Divertida")
-        self.root.geometry("600x550")
+        self.root.geometry("650x650")
         self.root.configure(bg=COR_FUNDO)
         
-        # Variáveis de controle dos jogos
         self.letra_alvo = ""
         self.numero_alvo = 0
         self.objeto_atual = ""
         
-        # Variáveis do Jogo da Memória
         self.emojis_jogo = []
         self.botoes_cartas = []
         self.reveladas = []
         self.cartas_selecionadas = []
         
-        # Inicializa a tela principal
         self.criar_tela_principal()
 
     def limpar_tela(self):
-        """Remove todos os widgets da tela atual para transição de menus."""
         for widget in self.root.winfo_children():
             widget.destroy()
+
+    def tocar_som_acerto(self):
+        try:
+            winsound.PlaySound("acerto.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
+            self.root.after(800, lambda: winsound.PlaySound(None, winsound.SND_PURGE))
+        except:
+            pass 
+
+    def tocar_som_erro(self):
+        try:
+            winsound.PlaySound("erro.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
+        except:
+            pass
 
     def criar_tela_principal(self):
         self.limpar_tela()
@@ -46,9 +55,8 @@ class AppEducacionalTEA:
             bg=COR_FUNDO, 
             fg=COR_TEXTO
         )
-        label_titulo.pack(pady=40)
+        label_titulo.pack(pady=30)
 
-        # Container para os botões do menu inicial
         frame_botoes = tk.Frame(self.root, bg=COR_FUNDO)
         frame_botoes.pack(pady=20)
 
@@ -95,7 +103,6 @@ class AppEducacionalTEA:
         btn_jogos.grid(row=0, column=2, padx=15)
 
     def abrir_modulo_letras(self):
-        """Módulo de Letras dinâmico para todo o alfabeto (A-Z)"""
         self.limpar_tela()
         
         self.letra_alvo = random.choice(string.ascii_uppercase)
@@ -107,18 +114,18 @@ class AppEducacionalTEA:
             bg=COR_FUNDO, 
             fg=COR_TEXTO
         )
-        label_instrucao.pack(pady=25)
+        label_instrucao.pack(pady=15)
 
         alternativas = [self.letra_alvo]
         while len(alternativas) < 4:
             letra_aleatoria = random.choice(string.ascii_uppercase)
-            if letra_aleatoria not in alternatives:
+            if letra_aleatoria not in alternativas:
                 alternativas.append(letra_aleatoria)
         
         random.shuffle(alternativas)
 
         frame_opcoes = tk.Frame(self.root, bg=COR_FUNDO)
-        frame_opcoes.pack(pady=15)
+        frame_opcoes.pack(pady=10)
 
         for indice, letra in enumerate(alternativas):
             linha = indice // 2
@@ -127,7 +134,7 @@ class AppEducacionalTEA:
             btn_opcao = tk.Button(
                 frame_opcoes, 
                 text=letra, 
-                font=("Arial", 32, "bold"), 
+                font=("Arial", 28, "bold"), 
                 width=5, 
                 bg="#FFFFFF",
                 fg=COR_TEXTO,
@@ -135,20 +142,21 @@ class AppEducacionalTEA:
                 relief="raised",
                 command=lambda l=letra: self.verificar_resposta_letras(l)
             )
-            btn_opcao.grid(row=linha, column=coluna, padx=15, pady=15)
+            btn_opcao.grid(row=linha, column=coluna, padx=15, pady=10)
         
         btn_voltar = tk.Button(self.root, text="⬅ Voltar ao Menu", font=("Comic Sans MS", 12), command=self.criar_tela_principal)
-        btn_voltar.pack(side="bottom", pady=25)
+        btn_voltar.pack(pady=15)
 
     def verificar_resposta_letras(self, letra_escolhida):
         if letra_escolhida == self.letra_alvo:
+            self.tocar_som_acerto()
             messagebox.showinfo("Parabéns!", "🌟 Você acertou! Muito bem! 🌟")
             self.abrir_modulo_letras()
         else:
+            self.tocar_som_erro()
             messagebox.showinfo("Tente de Novo", "Vamos tentar mais uma vez? Você consegue! ✨")
 
     def abrir_modulo_numeros(self):
-        """Módulo de Números: sorteia até 10 e varia os objetos na tela"""
         self.limpar_tela()
         
         self.numero_alvo = random.randint(1, 10)
@@ -164,12 +172,20 @@ class AppEducacionalTEA:
         
         label_instrucao = tk.Label(
             self.root, 
-            text=f"Quantos você vê?\n\n{exibicao_objetos}", 
+            text="Quantos você vê?", 
             font=("Comic Sans MS", 22, "bold"), 
             bg=COR_FUNDO, 
             fg=COR_TEXTO
         )
-        label_instrucao.pack(pady=20)
+        label_instrucao.pack(pady=10)
+
+        label_objetos = tk.Label(
+            self.root, 
+            text=exibicao_objetos, 
+            font=("Arial", 28), 
+            bg=COR_FUNDO
+        )
+        label_objetos.pack(pady=5)
 
         alternativas = [self.numero_alvo]
         while len(alternativas) < 4:
@@ -180,7 +196,7 @@ class AppEducacionalTEA:
         random.shuffle(alternativas)
 
         frame_opcoes = tk.Frame(self.root, bg=COR_FUNDO)
-        frame_opcoes.pack(pady=10)
+        frame_opcoes.pack(pady=5)
 
         for indice, num in enumerate(alternativas):
             linha = indice // 2
@@ -189,7 +205,7 @@ class AppEducacionalTEA:
             btn_opcao = tk.Button(
                 frame_opcoes, 
                 text=str(num), 
-                font=("Arial", 28, "bold"), 
+                font=("Arial", 26, "bold"), 
                 width=5, 
                 bg="#FFFFFF",
                 fg=COR_TEXTO,
@@ -197,20 +213,21 @@ class AppEducacionalTEA:
                 relief="raised",
                 command=lambda n=num: self.verificar_resposta_numeros(n)
             )
-            btn_opcao.grid(row=linha, column=coluna, padx=15, pady=12)
+            btn_opcao.grid(row=linha, column=coluna, padx=15, pady=8)
         
         btn_voltar = tk.Button(self.root, text="⬅ Voltar ao Menu", font=("Comic Sans MS", 12), command=self.criar_tela_principal)
-        btn_voltar.pack(side="bottom", pady=20)
+        btn_voltar.pack(pady=10)
 
     def verificar_resposta_numeros(self, numero_escolhido):
         if numero_escolhido == self.numero_alvo:
+            self.tocar_som_acerto()
             messagebox.showinfo("Parabéns!", "🌟 Você acertou! Muito bem! 🌟")
             self.abrir_modulo_numeros()
         else:
+            self.tocar_som_erro()
             messagebox.showinfo("Tente de Novo", "Vamos tentar mais uma vez? Você consegue! ✨")
 
     def abrir_modulo_jogos(self):
-        """Módulo de Estímulo Cognitivo: Jogo da Memória Ajustado para 3 Pares (6 cartas no total)"""
         self.limpar_tela()
         
         label_instrucao = tk.Label(
@@ -222,28 +239,22 @@ class AppEducacionalTEA:
         )
         label_instrucao.pack(pady=15)
 
-        # Banco de emojis únicos para o jogo da memória
         pool_emojis = ['🐶', '🍎', '🧸', '🚗', '🎈', '🐸', '⚽', '🦋', '🍦']
-        
-        # Sorteia exatamente 3 emojis únicos para a rodada atual
         emojis_escolhidos = random.sample(pool_emojis, 3)
         
-        # Duplica os 3 emojis para formar as 6 cartas (3 pares)
         self.emojis_jogo = emojis_escolhidos + emojis_escolhidos
         random.shuffle(self.emojis_jogo)
         
-        # Inicializa os estados das 6 cartas
         self.botoes_cartas = []
         self.reveladas = [False] * 6
         self.cartas_selecionadas = []
 
-        # Grid de 2 linhas x 3 colunas (Super limpo e equilibrado)
         frame_cartas = tk.Frame(self.root, bg=COR_FUNDO)
-        frame_cartas.pack(pady=15)
+        frame_cartas.pack(pady=10)
 
         for i in range(6):
-            linha = i // 3   # Divide por 3 colunas para gerar as linhas
-            coluna = i % 3   # O resto define em qual das 3 colunas o botão fica
+            linha = i // 3   
+            coluna = i % 3   
             
             btn_carta = tk.Button(
                 frame_cartas, 
@@ -253,15 +264,13 @@ class AppEducacionalTEA:
                 height=2, 
                 bg="#FFFFFF",
                 fg=COR_TEXTO,
-                bd=2,
-                relief="raised",
                 command=lambda idx=i: self.virar_carta(idx)
             )
             btn_carta.grid(row=linha, column=coluna, padx=12, pady=12)
             self.botoes_cartas.append(btn_carta)
 
         btn_voltar = tk.Button(self.root, text="⬅ Voltar ao Menu", font=("Comic Sans MS", 12), command=self.criar_tela_principal)
-        btn_voltar.pack(side="bottom", pady=20)
+        btn_voltar.pack(pady=15)
 
     def virar_carta(self, idx):
         if self.reveladas[idx] or len(self.cartas_selecionadas) >= 2 or idx in self.cartas_selecionadas:
@@ -280,11 +289,13 @@ class AppEducacionalTEA:
             self.reveladas[idx1] = True
             self.reveladas[idx2] = True
             
-            # Verifica se a criança encontrou todos os 3 pares (6 cartas)
             if all(self.reveladas):
                 messagebox.showinfo("Parabéns!", "🌟 Incrível! Você encontrou todos os 3 pares! 🌟")
-                self.abrir_modulo_jogos() # Reinicia com novas figuras
+                self.abrir_modulo_jogos() 
+            else:
+                self.tocar_som_acerto()
         else:
+            self.tocar_som_erro()
             self.botoes_cartas[idx1].config(text="❓")
             self.botoes_cartas[idx2].config(text="❓")
             
